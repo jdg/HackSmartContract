@@ -4,14 +4,14 @@ and/or modify it under the terms of the Do What The Fuck You Want
 To Public License, Version 2, as published by Sam Hocevar. See
 http://www.wtfpl.net/ for more details. */
 
-/* These contracts are examples of contracts with vulnerabilities in order to practice your hacking skills.
+/* These contracts are examples of contracts with bugs and vulnerabilities in order to practice your hacking skills.
 DO NOT USE THEM OR GET INSPIRATION FROM THEM TO MAKE CODE USED IN PRODUCTION 
 You are required to find vulnerabilities where an attacker harms someone else.
 Being able to destroy your own stuff is not a vulnerability and should be dealt at the interface level.
 */
 
 pragma solidity ^0.4.10;
-//*** Exercice 1 ***//
+//*** Exercise 1 ***//
 // Simple token you can buy and send.
 contract SimpleToken{
     mapping(address => uint) public balances;
@@ -34,7 +34,7 @@ contract SimpleToken{
     
 }
 
-//*** Exercice 2 ***//
+//*** Exercise 2 ***//
 // You can buy voting rights by sending ether to the contract.
 // You can vote for the value of your choice.
 contract VoteTwoChoices{
@@ -60,7 +60,7 @@ contract VoteTwoChoices{
 
 }
 
-//*** Exercice 3 ***//
+//*** Exercise 3 ***//
 // You can buy tokens.
 // The owner can set the price.
 contract BuyToken {
@@ -88,7 +88,7 @@ contract BuyToken {
     }
 }
 
-//*** Exercice 4 ***//
+//*** Exercise 4 ***//
 // Contract to store and redeem money.
 contract Store {
     struct Safe {
@@ -116,7 +116,7 @@ contract Store {
     }
 }
 
-//*** Exercice 5 ***//
+//*** Exercise 5 ***//
 // Count the total contribution of each user.
 // Assume that the one creating the contract contributed 1ETH.
 contract CountContribution{
@@ -145,7 +145,7 @@ contract CountContribution{
     
 }
 
-//*** Exercice 6 ***//
+//*** Exercise 6 ***//
 contract Token {
     mapping(address => uint) public balances;
     
@@ -175,7 +175,7 @@ contract Token {
     
 }
 
-//*** Exercice 7 ***//
+//*** Exercise 7 ***//
 // You can buy some object.
 // Further purchases are discounted.
 // You need to pay basePrice / (1 + objectBought), where objectBought is the number of object you previously bought.
@@ -198,7 +198,7 @@ contract DiscountedBuy {
     
 }
 
-//*** Exercice 8 ***//
+//*** Exercise 8 ***//
 // You choose Head or Tail and send 1 ETH.
 // The next party send 1 ETH and try to guess what you chose.
 // If it succeed it gets 2 ETH, else you get 2 ETH.
@@ -234,7 +234,7 @@ contract HeadOrTail {
     }
 }
 
-//*** Exercice 9 ***//
+//*** Exercise 9 ***//
 // You can store ETH in this contract and redeem them.
 contract Vault {
     mapping(address => uint) public balances;
@@ -251,7 +251,7 @@ contract Vault {
     }
 }
 
-//*** Exercice 10 ***//
+//*** Exercise 10 ***//
 // You choose Head or Tail and send 1 ETH.
 // The next party send 1 ETH and try to guess what you chose.
 // If it succeed it gets 2 ETH, else you get 2 ETH.
@@ -309,34 +309,44 @@ contract HeadTail {
         require(this.balance>=2 ether);
         partyB.transfer(2 ether);
     }
-    
 }
 
-//*** Exercice 11 ***//
-// You can store ETH in this contract and redeem them.
-contract VaultInvariant {
-    mapping(address => uint) public balances;
-    uint totalBalance;
-
-    /// @dev Store ETH in the contract.
-    function store() payable {
-        balances[msg.sender]+=msg.value;
-        totalBalance+=msg.value;
+//*** Exercise 11 ***//
+// You can create coffers put money into it and withdraw it.
+contract Coffers {
+    struct Coffer {address owner; uint[] slots;}
+    Coffer[] public coffers;
+    
+    /** @dev Create coffers.
+     *  @param _slots The amount of slots the coffer will have.
+     * */
+    function createCoffer(uint _slots) external {
+        Coffer storage coffer = coffers[coffers.length++];
+        coffer.owner = msg.sender;
+        coffer.slots.length = _slots;
     }
     
-    /// @dev Redeem your ETH.
-    function redeem() {
-        uint toTranfer = balances[msg.sender];
-        msg.sender.transfer(toTranfer);
-        balances[msg.sender]=0;
-        totalBalance-=toTranfer;
+    /** @dev Deposit money in one's coffer slot.
+     *  @dev _coffer The coffer to deposit money on.
+     *  @param _slot The slot to deposit money.
+     * */
+    function deposit(uint _coffer, uint _slot) payable external {
+        Coffer storage coffer = coffers[_coffer];
+        coffer.slots[_slot] += msg.value;
     }
     
-    /// @dev Let a user get all funds if an invariant is broken.
-    function invariantBroken() {
-        require(totalBalance!=this.balance);
-        
-        msg.sender.transfer(this.balance);
+    /** @dev withdraw all of the money of one's coffer slot.
+     *  @param _slot The slot to withdraw money from.
+     * */
+    function withdraw(uint _coffer, uint _slot) external {
+        Coffer storage coffer = coffers[_coffer];
+        require(coffer.owner == msg.sender);
+        msg.sender.transfer(coffer.slots[_slot]);
+        coffer.slots[_slot] = 0;
     }
-    
 }
+
+//*** Exercise Bonus ***//
+// One of the previous contracts has 2 vulnerabilities.
+// Find which one and describe the second vulnerability.
+
